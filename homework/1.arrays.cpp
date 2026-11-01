@@ -85,9 +85,15 @@ vector<int> mergeSortedArrays( const vector<int>& a, const vector<int>& b)
     while (i < a.size() && j < b.size()) 
     {
         if (a[i] <= b[j])
-            result.push_back(a[i++]);
+        {
+            result.push_back(a[i]);
+            i++;
+        }
         else
-            result.push_back(b[j++]);
+        {
+            result.push_back(b[j]);
+            j++;
+        }
     }
 
     while (i < a.size()) 
