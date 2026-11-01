@@ -1,301 +1,301 @@
-
-#include <iostream>
+﻿#include <iostream>
+#include <string>
 #include <vector>
-#include <algorithm>
 #include <cassert>
-#include <limits>
 
 using namespace std;
 
-// 1. sum of Numbers
-long long sumNumbers(int n) 
+struct ListNode
 {
-    return 1LL * n * (n + 1) / 2;
-}
+    int val;
+    ListNode* next;
 
-// 2. two sum (sorted array)
-vector<int> twoSum(const vector<int>& nums, int target) 
+    ListNode(int value, ListNode* nextNode = nullptr)
+        : val(value), next(nextNode) {}
+};
+
+// 1. reverse linked list: O(n) time, O(1) extra space
+ListNode* reverseLinkedList(ListNode* head)
 {
-    int left = 0;
-    int right = static_cast<int>(nums.size()) - 1;
+    ListNode* prev = nullptr;
+    ListNode* current = head;
 
-    while (left < right) 
+    while (current != nullptr)
     {
-        long long sum = 1LL * nums[left] + nums[right];
-
-        if (sum == target) 
-            return {left, right};
-        else if (sum < target) 
-            ++left;
-        else
-            --right;
+        ListNode* next = current->next;
+        current->next = prev;
+        prev = current;
+        current = next;
     }
 
-    return {};
+    return prev;
 }
 
-// 3. reverse array
-void reverseArray(vector<int>& nums) 
+// 2. middle of linked list: O(n) time, O(1) extra space
+// For an even-length list, return the second middle node.
+ListNode* middleNode(ListNode* head)
 {
-    int left = 0;
-    int right = static_cast<int>(nums.size()) - 1;
+    ListNode* slow = head;
+    ListNode* fast = head;
 
-    while (left < right) 
+    while (fast != nullptr && fast->next != nullptr)
     {
-        swap(nums[left], nums[right]);
-
-        ++left;
-        --right;
+        slow = slow->next;
+        fast = fast->next->next;
     }
+
+    return slow;
 }
 
-
-// Helper: reverse elements in [left, right]
-void reverseRange(vector<int>& nums, int left, int right) 
+// 3. remove all nodes with value val: O(n) time, O(1) extra space
+// The list nodes must be allocated with new.
+ListNode* removeElements(ListNode* head, int val)
 {
-    while (left < right) 
+    ListNode dummy(0, head);
+    ListNode* prev = &dummy;
+    ListNode* current = head;
+
+    while (current != nullptr)
     {
-        swap(nums[left], nums[right]);
-        ++left;
-        --right;
-    }
-}
-
-// 4. rotate array
-void rotateArray(vector<int>& nums, int k) 
-{
-    int n = static_cast<int>(nums.size());
-    if (n == 0) return;
-
-    k %= n;
-
-    reverseRange(nums, 0, n - 1);
-    reverseRange(nums, 0, k - 1);
-    reverseRange(nums, k, n - 1);
-}
-
-// 5. merge sorted arrays
-vector<int> mergeSortedArrays( 
-    const vector<int>& a, 
-    const vector<int>& b
-) 
-{
-    vector<int> result;
-    result.reserve(a.size() + b.size());
-
-    size_t i = 0, j = 0;
-
-    while (i < a.size() && j < b.size()) 
-    {
-        if (a[i] <= b[j])
+        if (current->val == val)
         {
-            result.push_back(a[i]);
+            prev->next = current->next;
+            delete current;
+            current = prev->next;
+        }
+        else
+        {
+            prev = current;
+            current = current->next;
+        }
+    }
+
+    return dummy.next;
+}
+
+// 4. check whether a is a subsequence of b: O(|b|) time, O(1) extra space
+bool isSubsequence(const string& a, const string& b)
+{
+    size_t i = 0;
+    size_t j = 0;
+
+    while (i < a.size() && j < b.size())
+    {
+        if (a[i] == b[j])
             i++;
-        }
-        else
-        {
-            result.push_back(b[j]);
-            j++;
-        }
-    }
-
-    while (i < a.size()) 
-    {
-        result.push_back(a[i]); 
-        i++;
-    }
-
-    while (j < b.size())
-    {
-        result.push_back(b[j]);
         j++;
     }
 
-    return result;
+    return i == a.size();
 }
 
-// 6. merge sorted arrays in-place
-// a has m sorted elements followed by n free slots
-void mergeSortedArraysInPlace(
-    vector<int>& a,
-    int m,
-    const vector<int>& b
-)
+// 5. pair sum in a sorted array: O(n) time, O(1) extra space
+bool hasPairWithSum(const vector<int>& nums, int target)
 {
-    int i = m - 1;
-    int j = static_cast<int>(b.size()) - 1;
-    int k = m + j;
+    size_t left = 0;
+    size_t right = nums.size();
 
-    while (j >= 0) 
+    while (right - left > 1)
     {
-        if (i >= 0 && a[i] > b[j]) 
-        {
-            a[k] = a[i];
-            i--;
-        }
-        else 
-        {    
-            a[k] = b[j];
-            j--;
-        }
-        k--;
+        long long sum = 1LL * nums[left] + nums[right - 1];
+        if (sum == target)
+            return true;
+        if (sum < target)
+            left++;
+        else
+            right--;
     }
+
+    return false;
 }
 
-// 7. minimum size subarray sum
-int minSubArrayLen(const vector<int>& nums, int target) 
+// 6. palindrome: O(n) time, O(1) extra space
+bool isPalindrome(const string& s)
 {
-    int left = 0;
-    int minLen = numeric_limits<int>::max();
-    long long currentSum = 0;
+    size_t left = 0;
+    size_t right = s.size();
 
-    for (int right = 0; right < static_cast<int>(nums.size()); ++right) 
+    while (left < right)
     {
-        currentSum += nums[right];
-
-        while (currentSum >= target) 
-        {
-            minLen = min(minLen, right - left + 1);
-            currentSum -= nums[left];
-            left++; 
-        }
+        right--;
+        if (s[left] != s[right])
+            return false;
+        left++;
     }
 
-    return minLen == numeric_limits<int>::max() ? 0 : minLen;
+    return true;
 }
 
-// 8.  sort binary array
-void sortBinaryArray(vector<int>& nums) 
+// 7. remove duplicates from a sorted array: O(n) time, O(1) extra space
+void removeDuplicates(vector<int>& nums)
 {
-    int left = 0;
-    int right = static_cast<int>(nums.size()) - 1;
+    if (nums.empty())
+        return;
 
-    while (left < right) 
+    size_t slow = 1;
+    for (size_t fast = 1; fast < nums.size(); fast++)
     {
-        if (nums[left] == 0) 
-            ++left;
-        else if (nums[right] == 1) 
-            --right;
-        else 
+        if (nums[fast] != nums[slow - 1])
         {
-            swap(nums[left], nums[right]);
-            ++left;
-            --right;
+            nums[slow] = nums[fast];
+            slow++;
         }
     }
+    nums.resize(slow);
 }
 
-// 9. dutch flag
-void sortColors(vector<int>& nums) 
+// 8. merge sorted linked lists: O(n + m) time, O(1) extra space
+ListNode* mergeSortedLists(ListNode* list1, ListNode* list2)
 {
-    int low = 0;
-    int mid = 0;
-    int high = static_cast<int>(nums.size()) - 1;
+    ListNode dummy(0);
+    ListNode* tail = &dummy;
 
-    while (mid <= high) {
-        if (nums[mid] == 0) 
+    while (list1 != nullptr && list2 != nullptr)
+    {
+        if (list1->val <= list2->val)
         {
-            swap(nums[low], nums[mid]);
-            ++low;
-            ++mid;
+            tail->next = list1;
+            list1 = list1->next;
         }
-        else if (nums[mid] == 1) 
-            ++mid;
-        else 
+        else
         {
-            swap(nums[mid], nums[high]);
-            --high;
+            tail->next = list2;
+            list2 = list2->next;
         }
+        tail = tail->next;
     }
+
+    tail->next = list1 != nullptr ? list1 : list2;
+    return dummy.next;
 }
 
-// 10. Move Even Numbers First
-void moveEvenFirst(vector<int>& nums) 
+// Helpers for list tests
+ListNode* makeList(initializer_list<int> values)
 {
-    int evenIndex = 0;
-
-    for (int i = 0; i < static_cast<int>(nums.size()); ++i) 
+    ListNode dummy(0);
+    ListNode* tail = &dummy;
+    for (int value : values)
     {
-        if (nums[i] % 2 == 0) 
-        {
-            swap(nums[i], nums[evenIndex]);
-            ++evenIndex;
-        }
+        tail->next = new ListNode(value);
+        tail = tail->next;
+    }
+    return dummy.next;
+}
+
+bool listEquals(ListNode* head, initializer_list<int> values)
+{
+    for (int value : values)
+    {
+        if (head == nullptr || head->val != value)
+            return false;
+        head = head->next;
+    }
+    return head == nullptr;
+}
+
+void deleteList(ListNode* head)
+{
+    while (head != nullptr)
+    {
+        ListNode* next = head->next;
+        delete head;
+        head = next;
     }
 }
 
-// 11. move zeroes
-void moveZeroes(vector<int>& nums) 
- {
-    int nonZeroIndex = 0;
-
-    for (int i = 0; i < static_cast<int>(nums.size()); ++i) 
-    {
-        if (nums[i] != 0) 
-        {
-            swap(nums[i], nums[nonZeroIndex]);
-            ++nonZeroIndex;
-        }
-    }
-}
-
-
-
-int main() 
+int main()
 {
     // 1
-    assert(sumNumbers(100) == 5050);
-    assert(sumNumbers(1000000) == 500000500000LL);
+    ListNode* list = makeList({1, 2, 3, 4, 5});
+    list = reverseLinkedList(list);
+    assert(listEquals(list, {5, 4, 3, 2, 1}));
+    deleteList(list);
+    assert(reverseLinkedList(nullptr) == nullptr);
+    list = makeList({1});
+    list = reverseLinkedList(list);
+    assert(listEquals(list, {1}));
+    deleteList(list);
 
     // 2
-    assert((twoSum({3, 8, 9, 11, 16, 18, 19, 21}, 25)
-            == vector<int>{2, 4}));
-    assert(twoSum({1, 2, 3}, 10).empty());
+    list = makeList({1, 2, 3, 4, 5});
+    assert(middleNode(list)->val == 3);
+    deleteList(list);
+    list = makeList({1, 2, 3, 4});
+    assert(middleNode(list)->val == 3);
+    deleteList(list);
+    assert(middleNode(nullptr) == nullptr);
 
     // 3
-    vector<int> nums = {1, 2, 3, 4, 5};
-    reverseArray(nums);
-    assert((nums == vector<int>{5, 4, 3, 2, 1}));
+    list = makeList({2, 2, 1, 2, 3, 2});
+    list = removeElements(list, 2);
+    assert(listEquals(list, {1, 3}));
+    list = removeElements(list, 9);
+    assert(listEquals(list, {1, 3}));
+    deleteList(list);
+    list = makeList({2, 2});
+    list = removeElements(list, 2);
+    assert(list == nullptr);
+    assert(removeElements(nullptr, 2) == nullptr);
 
     // 4
-    vector<int> a = {1, 2, 3, 4, 5, 6, 7};
-    rotateArray(a, 3);
-    assert((a == vector<int>{5, 6, 7, 1, 2, 3, 4}));
+    assert(isSubsequence("abc", "ahbgdc"));
+    assert(!isSubsequence("abc", "acb"));
+    assert(!isSubsequence("aa", "a"));
+    assert(isSubsequence("", "abc"));
+    assert(!isSubsequence("a", ""));
 
     // 5
-    assert((mergeSortedArrays({1, 7, 9}, {3, 8, 10, 11})
-            == vector<int>{1, 3, 7, 8, 9, 10, 11}));
+    assert(hasPairWithSum({1, 2, 3, 4, 6}, 8));
+    assert(hasPairWithSum({2, 2}, 4));
+    assert(!hasPairWithSum({1, 2, 3}, 7));
+    assert(!hasPairWithSum({2}, 4));
+    assert(!hasPairWithSum({}, 0));
+    assert(!hasPairWithSum({2147483647, 2147483647}, -2));
 
     // 6
-    vector<int> b = {3, 8, 10, 11, 0, 0, 0};
-    mergeSortedArraysInPlace(b, 4, {1, 7, 9});
-    assert((b == vector<int>{1, 3, 7, 8, 9, 10, 11}));
+    assert(isPalindrome("racecar"));
+    assert(isPalindrome("abba"));
+    assert(isPalindrome(""));
+    assert(isPalindrome("a"));
+    assert(!isPalindrome("hello"));
+    assert(!isPalindrome("ab"));
 
     // 7
-    assert(minSubArrayLen({2, 3, 1, 2, 4, 3}, 7) == 2);
-    assert(minSubArrayLen({1, 1, 1}, 10) == 0);
+    vector<int> nums = {1, 1, 2, 2, 3, 3};
+    removeDuplicates(nums);
+    assert((nums == vector<int>{1, 2, 3}));
+    nums = {4, 4, 4};
+    removeDuplicates(nums);
+    assert((nums == vector<int>{4}));
+    nums = {1, 2, 3};
+    removeDuplicates(nums);
+    assert((nums == vector<int>{1, 2, 3}));
+    nums.clear();
+    removeDuplicates(nums);
+    assert(nums.empty());
 
     // 8
-    vector<int> c = {0, 1, 1, 0, 1, 0, 1, 0};
-    sortBinaryArray(c);
-    assert((c == vector<int>{0, 0, 0, 0, 1, 1, 1, 1}));
-
-    // 9
-    vector<int> e = {2, 0, 2, 1, 1, 0};
-    sortColors(e);
-    assert((e == vector<int>{0, 0, 1, 1, 2, 2}));
-
-    // 10
-    vector<int> f = {3, 2, 4, 1, 11, 8, 9};
-    moveEvenFirst(f);
-    assert((f == vector<int>{2, 4, 8, 1, 11, 3, 9}));
-
-    // 11
-    vector<int> g = {0, 0, 1, 0, 3, 12};
-    moveZeroes(g);
-    assert((g == vector<int>{1, 3, 12, 0, 0, 0}));
+    ListNode* list1 = makeList({3, 6, 8});
+    ListNode* list2 = makeList({4, 7, 9, 11});
+    list = mergeSortedLists(list1, list2);
+    assert(listEquals(list, {3, 4, 6, 7, 8, 9, 11}));
+    deleteList(list);
+    list1 = makeList({1, 2, 2});
+    list2 = makeList({1, 2, 3});
+    list = mergeSortedLists(list1, list2);
+    assert(listEquals(list, {1, 1, 2, 2, 2, 3}));
+    deleteList(list);
+    list1 = makeList({1, 2});
+    list = mergeSortedLists(nullptr, list1);
+    assert(list == list1);
+    assert(listEquals(list, {1, 2}));
+    deleteList(list);
+    list1 = makeList({3});
+    list = mergeSortedLists(list1, nullptr);
+    assert(list == list1);
+    deleteList(list);
+    assert(mergeSortedLists(nullptr, nullptr) == nullptr);
 
     cout << "All tests passed!" << endl;
-
     return 0;
 }

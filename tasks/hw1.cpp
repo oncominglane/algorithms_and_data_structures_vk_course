@@ -173,14 +173,14 @@ void sortBinaryArray(vector<int>& nums)
     while (left < right) 
     {
         if (nums[left] == 0) 
-            ++left;
+            left++;
         else if (nums[right] == 1) 
-            --right;
+            right--;
         else 
         {
             swap(nums[left], nums[right]);
-            ++left;
-            --right;
+            left++;
+            right--;
         }
     }
 }
@@ -196,15 +196,15 @@ void sortColors(vector<int>& nums)
         if (nums[mid] == 0) 
         {
             swap(nums[low], nums[mid]);
-            ++low;
-            ++mid;
-        }
+            low++;
+            mid++;
+        }   
         else if (nums[mid] == 1) 
-            ++mid;
+            mid++;
         else 
         {
             swap(nums[mid], nums[high]);
-            --high;
+            high--;
         }
     }
 }
