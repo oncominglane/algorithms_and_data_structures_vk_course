@@ -75,7 +75,10 @@ void rotateArray(vector<int>& nums, int k)
 }
 
 // 5. merge sorted arrays
-vector<int> mergeSortedArrays( const vector<int>& a, const vector<int>& b) 
+vector<int> mergeSortedArrays( 
+    const vector<int>& a, 
+    const vector<int>& b
+) 
 {
     vector<int> result;
     result.reserve(a.size() + b.size());
@@ -97,10 +100,16 @@ vector<int> mergeSortedArrays( const vector<int>& a, const vector<int>& b)
     }
 
     while (i < a.size()) 
-        result.push_back(a[i++]);
+    {
+        result.push_back(a[i]); 
+        i++;
+    }
 
     while (j < b.size())
-        result.push_back(b[j++]);
+    {
+        result.push_back(b[j]);
+        j++;
+    }
 
     return result;
 }
@@ -120,9 +129,16 @@ void mergeSortedArraysInPlace(
     while (j >= 0) 
     {
         if (i >= 0 && a[i] > b[j]) 
-            a[k--] = a[i--];
+        {
+            a[k] = a[i];
+            i--;
+        }
         else 
-            a[k--] = b[j--];
+        {    
+            a[k] = b[j];
+            j--;
+        }
+        k--;
     }
 }
 
@@ -140,7 +156,8 @@ int minSubArrayLen(const vector<int>& nums, int target)
         while (currentSum >= target) 
         {
             minLen = min(minLen, right - left + 1);
-            currentSum -= nums[left++];
+            currentSum -= nums[left];
+            left++; 
         }
     }
 
