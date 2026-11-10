@@ -1,301 +1,236 @@
-
-#include <iostream>
+﻿#include <iostream>
+#include <string>
 #include <vector>
+#include <array>
 #include <algorithm>
+#include <unordered_map>
 #include <cassert>
 #include <limits>
 
 using namespace std;
 
-// 1. sum of Numbers
-long long sumNumbers(int n) 
-{
-    return 1LL * n * (n + 1) / 2;
-}
-
-// 2. two sum (sorted array)
-vector<int> twoSum(const vector<int>& nums, int target) 
+// 1. integer square root: O(log n) time, O(1) extra space
+// Search in [0, target]: the root of a nonnegative integer cannot exceed it.
+// Each step halves the range; right is the floor of the root at the end.
+int binarySearchSqrt(int target)
 {
     int left = 0;
-    int right = static_cast<int>(nums.size()) - 1;
+    int right = target;
 
-    while (left < right) 
+    while (left <= right)
     {
-        long long sum = 1LL * nums[left] + nums[right];
+        int middle = left + (right - left) / 2;
+        long long square = 1LL * middle * middle;
 
-        if (sum == target) 
-            return {left, right};
-        else if (sum < target) 
-            ++left;
+        if (square > target)
+        {
+            right = middle - 1;
+            continue;
+        }
+        if (square < target)
+        {
+            left = middle + 1;
+            continue;
+        }
+        return middle;
+    }
+
+    return right;
+}
+
+// 2. two copiers: O(log(1 + n * max(x, y))) time, O(1) extra space
+// n >= 0, x > 0, y > 0. First make one copy in min(x, y) minutes.
+// Then time / x + time / y must be at least n - 1; this condition is monotonic.
+long long copyTime(int n, int x, int y)
+{
+    if (n == 0)
+        return 0;
+
+    long long left = 0;
+    long long right = 1LL * (n - 1) * max(x, y);
+
+    while (left + 1 < right)
+    {
+        long long middle = left + (right - left) / 2;
+
+        if (middle / x + middle / y < n - 1)
+            left = middle;
         else
-            --right;
+            right = middle;
+    }
+
+    return right + min(x, y);
+}
+
+// 3. feed animals: O(n log n + m log m) time, O(n + m) space for input copies
+// Give the smallest suitable portion to the least demanding unfed animal.
+// Smaller portions cannot feed anyone remaining; larger ones are saved for later.
+int feedAnimals(vector<int> animals, vector<int> food)
+{
+    if (animals.empty() || food.empty())
+        return 0;
+
+    sort(animals.begin(), animals.end());
+    sort(food.begin(), food.end());
+
+    size_t count = 0;
+    for (int portion : food)
+    {
+        if (portion >= animals[count])
+            count++;
+        if (count == animals.size())
+            break;
+    }
+
+    return static_cast<int>(count);
+}
+
+// 4. extra letter: O(|a| + |b|) expected time, O(k) extra space
+// Count letters in b, then subtract occurrences from a.
+// The added letter is the only one with a positive count; k is the alphabet size.
+string extraLetter(const string& a, const string& b)
+{
+    unordered_map<char, int> counts;
+    for (char letter : b)
+        counts[letter]++;
+
+    for (char letter : a)
+    {
+        auto it = counts.find(letter);
+        if (it != counts.end())
+            it->second--;
+    }
+
+    for (const auto& entry : counts)
+    {
+        if (entry.second > 0)
+            return string(1, entry.first);
+    }
+
+    return "";
+}
+
+// 5. two sum in an unsorted array: O(n) expected time, O(n) extra space
+// Cache value -> index, so each complement lookup takes O(1) on average.
+// Check different indices: one array element cannot be used twice.
+vector<int> twoSum(const vector<int>& nums, int target)
+{
+    unordered_map<long long, int> cache;
+    for (int i = 0; i < static_cast<int>(nums.size()); i++)
+        cache[nums[i]] = i;
+
+    for (int i = 0; i < static_cast<int>(nums.size()); i++)
+    {
+        long long diff = 1LL * target - nums[i];
+        auto it = cache.find(diff);
+        if (it != cache.end() && it->second != i)
+            return {i, it->second};
     }
 
     return {};
 }
 
-// 3. reverse array
-void reverseArray(vector<int>& nums) 
+// 6. group anagrams: O(L + k * n) expected time, O(L + k * n) space
+// L is the total input length, n is the number of strings, k = 256 byte values.
+// Equal character counts give equal keys. Separators prevent ambiguous keys.
+vector<vector<string>> groupAnagrams(const vector<string>& strs)
 {
-    int left = 0;
-    int right = static_cast<int>(nums.size()) - 1;
+    unordered_map<string, size_t> groups;
+    vector<vector<string>> result;
 
-    while (left < right) 
+    for (const string& word : strs)
     {
-        swap(nums[left], nums[right]);
+        array<size_t, 256> counts{};
+        for (unsigned char letter : word)
+            counts[letter]++;
 
-        ++left;
-        --right;
-    }
-}
+        string key;
+        for (size_t count : counts)
+            key += to_string(count) + '#';
 
-
-// Helper: reverse elements in [left, right]
-void reverseRange(vector<int>& nums, int left, int right) 
-{
-    while (left < right) 
-    {
-        swap(nums[left], nums[right]);
-        ++left;
-        --right;
-    }
-}
-
-// 4. rotate array
-void rotateArray(vector<int>& nums, int k) 
-{
-    int n = static_cast<int>(nums.size());
-    if (n == 0) return;
-
-    k %= n;
-
-    reverseRange(nums, 0, n - 1);
-    reverseRange(nums, 0, k - 1);
-    reverseRange(nums, k, n - 1);
-}
-
-// 5. merge sorted arrays
-vector<int> mergeSortedArrays( 
-    const vector<int>& a, 
-    const vector<int>& b
-) 
-{
-    vector<int> result;
-    result.reserve(a.size() + b.size());
-
-    size_t i = 0, j = 0;
-
-    while (i < a.size() && j < b.size()) 
-    {
-        if (a[i] <= b[j])
+        auto it = groups.find(key);
+        if (it == groups.end())
         {
-            result.push_back(a[i]);
-            i++;
+            groups[key] = result.size();
+            result.push_back({word});
         }
         else
-        {
-            result.push_back(b[j]);
-            j++;
-        }
-    }
-
-    while (i < a.size()) 
-    {
-        result.push_back(a[i]); 
-        i++;
-    }
-
-    while (j < b.size())
-    {
-        result.push_back(b[j]);
-        j++;
+            result[it->second].push_back(word);
     }
 
     return result;
 }
 
-// 6. merge sorted arrays in-place
-// a has m sorted elements followed by n free slots
-void mergeSortedArraysInPlace(
-    vector<int>& a,
-    int m,
-    const vector<int>& b
-)
+// Helper: normalize group order for anagram tests
+vector<vector<string>> normalizeGroups(vector<vector<string>> groups)
 {
-    int i = m - 1;
-    int j = static_cast<int>(b.size()) - 1;
-    int k = m + j;
-
-    while (j >= 0) 
-    {
-        if (i >= 0 && a[i] > b[j]) 
-        {
-            a[k] = a[i];
-            i--;
-        }
-        else 
-        {    
-            a[k] = b[j];
-            j--;
-        }
-        k--;
-    }
+    for (vector<string>& group : groups)
+        sort(group.begin(), group.end());
+    sort(groups.begin(), groups.end());
+    return groups;
 }
 
-// 7. minimum size subarray sum
-int minSubArrayLen(const vector<int>& nums, int target) 
-{
-    int left = 0;
-    int minLen = numeric_limits<int>::max();
-    long long currentSum = 0;
-
-    for (int right = 0; right < static_cast<int>(nums.size()); ++right) 
-    {
-        currentSum += nums[right];
-
-        while (currentSum >= target) 
-        {
-            minLen = min(minLen, right - left + 1);
-            currentSum -= nums[left];
-            left++; 
-        }
-    }
-
-    return minLen == numeric_limits<int>::max() ? 0 : minLen;
-}
-
-// 8.  sort binary array
-void sortBinaryArray(vector<int>& nums) 
-{
-    int left = 0;
-    int right = static_cast<int>(nums.size()) - 1;
-
-    while (left < right) 
-    {
-        if (nums[left] == 0) 
-            ++left;
-        else if (nums[right] == 1) 
-            --right;
-        else 
-        {
-            swap(nums[left], nums[right]);
-            ++left;
-            --right;
-        }
-    }
-}
-
-// 9. dutch flag
-void sortColors(vector<int>& nums) 
-{
-    int low = 0;
-    int mid = 0;
-    int high = static_cast<int>(nums.size()) - 1;
-
-    while (mid <= high) {
-        if (nums[mid] == 0) 
-        {
-            swap(nums[low], nums[mid]);
-            ++low;
-            ++mid;
-        }
-        else if (nums[mid] == 1) 
-            ++mid;
-        else 
-        {
-            swap(nums[mid], nums[high]);
-            --high;
-        }
-    }
-}
-
-// 10. Move Even Numbers First
-void moveEvenFirst(vector<int>& nums) 
-{
-    int evenIndex = 0;
-
-    for (int i = 0; i < static_cast<int>(nums.size()); ++i) 
-    {
-        if (nums[i] % 2 == 0) 
-        {
-            swap(nums[i], nums[evenIndex]);
-            ++evenIndex;
-        }
-    }
-}
-
-// 11. move zeroes
-void moveZeroes(vector<int>& nums) 
- {
-    int nonZeroIndex = 0;
-
-    for (int i = 0; i < static_cast<int>(nums.size()); ++i) 
-    {
-        if (nums[i] != 0) 
-        {
-            swap(nums[i], nums[nonZeroIndex]);
-            ++nonZeroIndex;
-        }
-    }
-}
-
-
-
-int main() 
+int main()
 {
     // 1
-    assert(sumNumbers(100) == 5050);
-    assert(sumNumbers(1000000) == 500000500000LL);
+    assert(binarySearchSqrt(0) == 0);
+    assert(binarySearchSqrt(1) == 1);
+    assert(binarySearchSqrt(2) == 1);
+    assert(binarySearchSqrt(8) == 2);
+    assert(binarySearchSqrt(16) == 4);
+    assert(binarySearchSqrt(numeric_limits<int>::max()) == 46340);
 
     // 2
-    assert((twoSum({3, 8, 9, 11, 16, 18, 19, 21}, 25)
-            == vector<int>{2, 4}));
-    assert(twoSum({1, 2, 3}, 10).empty());
+    assert(copyTime(0, 1, 2) == 0);
+    assert(copyTime(1, 3, 2) == 2);
+    assert(copyTime(2, 1, 2) == 2);
+    assert(copyTime(4, 1, 1) == 3);
+    assert(copyTime(5, 1, 2) == 4);
+    assert(copyTime(5, 2, 1) == 4);
+    assert(copyTime(1000000000, 10, 10) == 5000000010LL);
 
     // 3
-    vector<int> nums = {1, 2, 3, 4, 5};
-    reverseArray(nums);
-    assert((nums == vector<int>{5, 4, 3, 2, 1}));
+    assert(feedAnimals({3, 4, 7}, {8, 1, 2}) == 1);
+    assert(feedAnimals({3, 8, 1, 4}, {1, 1, 2}) == 1);
+    assert(feedAnimals({1, 2, 2}, {7, 1}) == 2);
+    assert(feedAnimals({8, 2, 3, 2}, {1, 4, 3, 8}) == 3);
+    assert(feedAnimals({1, 8}, {8, 1}) == 2);
+    assert(feedAnimals({1}, {1, 2, 3}) == 1);
+    assert(feedAnimals({}, {1, 2}) == 0);
+    assert(feedAnimals({1, 2}, {}) == 0);
 
     // 4
-    vector<int> a = {1, 2, 3, 4, 5, 6, 7};
-    rotateArray(a, 3);
-    assert((a == vector<int>{5, 6, 7, 1, 2, 3, 4}));
+    assert(extraLetter("uio", "oeiu") == "e");
+    assert(extraLetter("fe", "efo") == "o");
+    assert(extraLetter("bbb", "bbbb") == "b");
+    assert(extraLetter("", "a") == "a");
+    assert(extraLetter("ab", "ab").empty());
 
     // 5
-    assert((mergeSortedArrays({1, 7, 9}, {3, 8, 10, 11})
-            == vector<int>{1, 3, 7, 8, 9, 10, 11}));
+    assert((twoSum({2, 7, 11, 15}, 9) == vector<int>{0, 1}));
+    assert((twoSum({3, 2, 4}, 6) == vector<int>{1, 2}));
+    assert((twoSum({3, 3}, 6) == vector<int>{0, 1}));
+    assert((twoSum({-3, 4, 3, 90}, 0) == vector<int>{0, 2}));
+    assert(twoSum({3}, 6).empty());
+    assert(twoSum({1, 2, 3}, 10).empty());
+    assert(twoSum({}, 0).empty());
+    assert(twoSum({numeric_limits<int>::max(), 1},
+                  numeric_limits<int>::min()).empty());
+    assert((twoSum({numeric_limits<int>::min(), -1},
+                   numeric_limits<int>::min() + 1).empty()));
 
     // 6
-    vector<int> b = {3, 8, 10, 11, 0, 0, 0};
-    mergeSortedArraysInPlace(b, 4, {1, 7, 9});
-    assert((b == vector<int>{1, 3, 7, 8, 9, 10, 11}));
-
-    // 7
-    assert(minSubArrayLen({2, 3, 1, 2, 4, 3}, 7) == 2);
-    assert(minSubArrayLen({1, 1, 1}, 10) == 0);
-
-    // 8
-    vector<int> c = {0, 1, 1, 0, 1, 0, 1, 0};
-    sortBinaryArray(c);
-    assert((c == vector<int>{0, 0, 0, 0, 1, 1, 1, 1}));
-
-    // 9
-    vector<int> e = {2, 0, 2, 1, 1, 0};
-    sortColors(e);
-    assert((e == vector<int>{0, 0, 1, 1, 2, 2}));
-
-    // 10
-    vector<int> f = {3, 2, 4, 1, 11, 8, 9};
-    moveEvenFirst(f);
-    assert((f == vector<int>{2, 4, 8, 1, 11, 3, 9}));
-
-    // 11
-    vector<int> g = {0, 0, 1, 0, 3, 12};
-    moveZeroes(g);
-    assert((g == vector<int>{1, 3, 12, 0, 0, 0}));
+    assert((normalizeGroups(groupAnagrams({"eat", "tea", "tan", "ate", "nat", "bat"}))
+            == normalizeGroups({{"bat"}, {"nat", "tan"}, {"ate", "eat", "tea"}})));
+    assert((normalizeGroups(groupAnagrams({"won", "now", "aaa", "ooo", "ooo"}))
+            == normalizeGroups({{"aaa"}, {"ooo", "ooo"}, {"won", "now"}})));
+    assert((groupAnagrams({""}) == vector<vector<string>>{{""}}));
+    assert((groupAnagrams({"", ""}) == vector<vector<string>>{{"", ""}}));
+    assert((groupAnagrams({"a"}) == vector<vector<string>>{{"a"}}));
+    assert((normalizeGroups(groupAnagrams({"aA!", "!Aa", "aa!"}))
+            == normalizeGroups({{"aA!", "!Aa"}, {"aa!"}})));
+    assert(groupAnagrams({}).empty());
 
     cout << "All tests passed!" << endl;
-
     return 0;
 }

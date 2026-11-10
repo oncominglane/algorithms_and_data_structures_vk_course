@@ -14,9 +14,34 @@ struct ListNode
         : val(value), next(nextNode) {}
 };
 
+// 0. does 1-linked list hav cycle?
+bool hasCycle(ListNode* head) {
+    if (head == nullptr || head->next == nullptr) {
+        return false;
+    }
+
+    ListNode* slow = head;
+    ListNode* fast = head->next;
+
+    while (slow != fast) {
+        if (fast == nullptr || fast->next == nullptr) {
+            return false;
+        }
+
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    return true;
+}
+
 // 1. reverse linked list: O(n) time, O(1) extra space
 ListNode* reverseLinkedList(ListNode* head)
 {
+    if (head == nullptr || head->next == nullptr) {
+        return head;
+    }
+
     ListNode* prev = nullptr;
     ListNode* current = head;
 
@@ -29,6 +54,22 @@ ListNode* reverseLinkedList(ListNode* head)
     }
 
     return prev;
+}
+
+// 1. reverse linked list: O(n) time, O(n) ! extra space
+ListNode* reverseLinkedListRecursive(ListNode* head) 
+{
+    if (head == nullptr || head->next == nullptr) {
+        return head;
+    }
+    
+    ListNode* newHead = reverseLinkedListRecursive(head->next);
+    
+    // Разворачиваем текущую связь
+    head->next->next = head;
+    head->next = nullptr; 
+    
+    return newHead;
 }
 
 // 2. middle of linked list: O(n) time, O(1) extra space
@@ -205,18 +246,41 @@ void deleteList(ListNode* head)
 
 int main()
 {
+
+    // 0
+    ListNode* node4 = new ListNode(4);
+    ListNode* node3 = new ListNode(3, node4);
+    ListNode* node2 = new ListNode(2, node3);
+    ListNode* head = new ListNode(1, node2);
+    node4->next = node2; //
+    assert(hasCycle(head) == 1);
+    
+
     // 1
-    ListNode* list = makeList({1, 2, 3, 4, 5});
-    list = reverseLinkedList(list);
-    assert(listEquals(list, {5, 4, 3, 2, 1}));
-    deleteList(list);
+    ListNode* list1 = makeList({1, 2, 3, 4, 5});
+    ListNode* list2 = makeList({1, 2, 3, 4, 5});
+    list1 = reverseLinkedList(list1);
+    list2 = reverseLinkedListRecursive(list2);
+    assert(listEquals(list1, {5, 4, 3, 2, 1}));
+    assert(listEquals(list2, {5, 4, 3, 2, 1}));
+    deleteList(list1);
+    deleteList(list2);
+
     assert(reverseLinkedList(nullptr) == nullptr);
-    list = makeList({1});
-    list = reverseLinkedList(list);
-    assert(listEquals(list, {1}));
-    deleteList(list);
+    assert(reverseLinkedListRecursive(nullptr) == nullptr);
+
+    list1 = makeList({1});
+    list2 = makeList({1});
+    list1 = reverseLinkedList(list1);
+    list2 = reverseLinkedListRecursive(list2);
+    assert(listEquals(list1, {1}));
+    assert(listEquals(list2, {1}));
+    deleteList(list1);
+    deleteList(list2);
+
 
     // 2
+    ListNode* list = makeList({1, 2, 3, 4, 5});
     list = makeList({1, 2, 3, 4, 5});
     assert(middleNode(list)->val == 3);
     deleteList(list);
@@ -275,24 +339,24 @@ int main()
     assert(nums.empty());
 
     // 8
-    ListNode* list1 = makeList({3, 6, 8});
-    ListNode* list2 = makeList({4, 7, 9, 11});
-    list = mergeSortedLists(list1, list2);
+    ListNode* list3 = makeList({3, 6, 8});
+    ListNode* list4 = makeList({4, 7, 9, 11});
+    list = mergeSortedLists(list3, list4);
     assert(listEquals(list, {3, 4, 6, 7, 8, 9, 11}));
     deleteList(list);
-    list1 = makeList({1, 2, 2});
-    list2 = makeList({1, 2, 3});
-    list = mergeSortedLists(list1, list2);
+    list3 = makeList({1, 2, 2});
+    list4 = makeList({1, 2, 3});
+    list = mergeSortedLists(list3, list4);
     assert(listEquals(list, {1, 1, 2, 2, 2, 3}));
     deleteList(list);
-    list1 = makeList({1, 2});
-    list = mergeSortedLists(nullptr, list1);
-    assert(list == list1);
+    list3 = makeList({1, 2});
+    list = mergeSortedLists(nullptr, list3);
+    assert(list == list3);
     assert(listEquals(list, {1, 2}));
     deleteList(list);
-    list1 = makeList({3});
-    list = mergeSortedLists(list1, nullptr);
-    assert(list == list1);
+    list3 = makeList({3});
+    list = mergeSortedLists(list3, nullptr);
+    assert(list == list3);
     deleteList(list);
     assert(mergeSortedLists(nullptr, nullptr) == nullptr);
 
